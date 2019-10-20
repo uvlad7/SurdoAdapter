@@ -26,6 +26,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|center_horizontal"
         android:layout_margin="@dimen/fab_margin"
+        app:fabCustomSize="@dimen/design_fab_size"
+        android:scaleType="center"
         app:srcCompat="@android:drawable/ic_btn_speak_now" />
 
     <include layout="@layout/content_main" />
