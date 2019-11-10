@@ -8,5 +8,4 @@
     <dimen name="design_fab_size" tools:override="true">256dp</dimen>
     <dimen name="design_fab_content_size" tools:override="true">196dp</dimen>
     <dimen name="design_fab_image_size" tools:override="true">196dp</dimen>
-
 </resources>

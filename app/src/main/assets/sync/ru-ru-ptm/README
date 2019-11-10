@@ -1,0 +1,28 @@
+# See the file "COPYING" for for information about license and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
+
+This package contains Russian acoustic model and Russian langauge
+model based on morphological composition
+
+Acoustic model:
+
+ - sample rate 8000Hz
+ - 4000 senones
+ - context depend
+ - continuous
+ - all noise marked as SIL
+ - created used the data from http://www.voxforge.org and https://github.com/zamiron/ru4sphinx
+
+Language model:
+
+ - 3gram
+ - 500000 base word in vocabulary
+ - created using the data from http://www.lib.ru
+
+Example how to use it:
+
+    pocketsphinx_continuous -infile test.wav \
+	-hmm zero_ru.cd_cont_4000 -dict ru.dic -lm ru.lm -remove_noise no
+
+Author: Zamir Ostroukhov <zamiron@gmail.com>
