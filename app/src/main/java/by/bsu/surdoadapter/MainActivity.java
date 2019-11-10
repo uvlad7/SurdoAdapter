@@ -32,11 +32,11 @@ import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
 public class MainActivity extends AppCompatActivity implements RecognitionListener {
-    private static final String KWS_SEARCH = "активация";
+    private static final String KWS_SEARCH = "wakeup";
     /* Keyword we are looking for to activate menu */
-    private static final String KEYPHRASE = "сурдопереводчик";
+    private static final String KEYPHRASE = "старт";
     /* Named searches allow to quickly reconfigure the decoder */
-    private static final String MENU_SEARCH = "меню";
+    private static final String MENU_SEARCH = "menu";
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     /* Recognition object */
@@ -54,7 +54,11 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchSearch(MENU_SEARCH);
+                try {
+                    switchSearch(MENU_SEARCH);
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, e.getClass().getCanonicalName(), Toast.LENGTH_LONG).show();
+                }
             }
         });
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -144,8 +148,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE))
             switchSearch(MENU_SEARCH);
-        else
-            Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
+        Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -174,8 +177,10 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         // If we are not spotting, start listening with timeout (10000 ms or 10 seconds).
         if (searchName.equals(KWS_SEARCH))
             recognizer.startListening(searchName);
-        else
+        else {
+            Toast.makeText(MainActivity.this, "Start listening", Toast.LENGTH_LONG).show();
             recognizer.startListening(searchName, 10000);
+        }
     }
 
     private void setupRecognizer(File assetsDir) throws IOException {
