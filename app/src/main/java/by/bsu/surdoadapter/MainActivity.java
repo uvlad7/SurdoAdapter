@@ -4,9 +4,9 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
                 try {
                     switchSearch(MENU_SEARCH);
                 } catch (Exception e) {
-                    Toast.makeText(MainActivity.this, e.getClass().getCanonicalName(), Toast.LENGTH_LONG).show();
+                    Log.e("click", e.getClass().getCanonicalName());
                 }
             }
         });
@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         @Override
         protected void onPostExecute(Exception result) {
             if (result != null) {
-                Toast.makeText(activityReference.get(), "Failed to init recognizer " + result, Toast.LENGTH_LONG).show();
+                Log.e("onPostExecute", "Failed to init recognizer");
             } else {
                 activityReference.get().switchSearch(KWS_SEARCH);
             }
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE))
             switchSearch(MENU_SEARCH);
-        Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
+        Log.e("onPartialResult", text);
     }
 
     /**
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     public void onResult(Hypothesis hypothesis) {
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
-            Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();
+            Log.e("onResult", text);
         }
     }
 
@@ -175,10 +175,12 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         recognizer.stop();
 
         // If we are not spotting, start listening with timeout (10000 ms or 10 seconds).
-        if (searchName.equals(KWS_SEARCH))
+        if (searchName.equals(KWS_SEARCH)) {
             recognizer.startListening(searchName);
+            Log.e("switchSearch", "Activated");
+        }
         else {
-            Toast.makeText(MainActivity.this, "Start listening", Toast.LENGTH_LONG).show();
+            Log.e("switchSearch", "Start listening");
             recognizer.startListening(searchName, 10000);
         }
     }
@@ -209,17 +211,18 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     @Override
     public void onError(Exception error) {
-        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+        Log.e("onError", error.getMessage());
     }
 
     @Override
     public void onTimeout() {
         switchSearch(KWS_SEARCH);
+        Log.e("onTimeout", "Stop listening");
     }
 
     @Override
     public void onBeginningOfSpeech() {
-        Toast.makeText(MainActivity.this, "Start recognition", Toast.LENGTH_LONG).show();
+        Log.e("onBeginningOfSpeech", "Start recognition");
     }
 
     @Override
