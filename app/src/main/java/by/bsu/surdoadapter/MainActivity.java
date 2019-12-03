@@ -2,18 +2,16 @@ package by.bsu.surdoadapter;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
+import android.widget.MediaController;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +23,15 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+
+import by.bsu.surdoadapter.db.DatabaseHelper;
 import edu.cmu.pocketsphinx.Assets;
 import edu.cmu.pocketsphinx.Hypothesis;
 import edu.cmu.pocketsphinx.RecognitionListener;
@@ -32,6 +39,13 @@ import edu.cmu.pocketsphinx.SpeechRecognizer;
 import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
 public class MainActivity extends AppCompatActivity implements RecognitionListener {
+
+    //Переменная для работы с БД
+    DatabaseHelper mDBHelper;
+   public SQLiteDatabase mDb;
+
+    VideoView videoView;
+
     private static final String KWS_SEARCH = "wakeup";
     /* Keyword we are looking for to activate menu */
     private static final String KEYPHRASE = "старт";
@@ -78,8 +92,18 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
         }
 
+        //work with database
+        mDBHelper = new DatabaseHelper(this);
+        mDb = mDBHelper.getReadableDatabase();
+
+        //work with video
+        videoView = (VideoView) findViewById(R.id.videoView);
+        videoView.setMediaController(new MediaController(this));
+
         new SetupTask(this).execute();
     }
+
+
 
     private static class SetupTask extends AsyncTask<Void, Void, Exception> {
         WeakReference<MainActivity> activityReference;
@@ -158,6 +182,13 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     public void onResult(Hypothesis hypothesis) {
         if (hypothesis != null) {
             String text = hypothesis.getHypstr();
+            //сделать селект к базе
+            //найти картиночку и вывести в VideoView
+            String query = "SELECT path FROM lib where phrase = " + text + ";";
+            Cursor cursor = mDb.rawQuery(query, null);
+            videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() +"/"+cursor.getString(0)));
+            videoView.requestFocus(0);
+            videoView.start();
             Log.e("onResult", text);
         }
     }
@@ -211,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     @Override
     public void onError(Exception error) {
+        //вывести, что все плохо в TextView
         Log.e("onError", error.getMessage());
     }
 
