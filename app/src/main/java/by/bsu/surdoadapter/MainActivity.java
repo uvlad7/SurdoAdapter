@@ -34,9 +34,9 @@ import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 public class MainActivity extends AppCompatActivity implements RecognitionListener {
     private static final String KWS_SEARCH = "wakeup";
     /* Keyword we are looking for to activate menu */
-    private static final String KEYPHRASE = "старт";
+    private static final String KEYPHRASE = "активировать";
     /* Named searches allow to quickly reconfigure the decoder */
-    private static final String MENU_SEARCH = "menu";
+    private static final String PHRASE_SEARCH = "phrase";
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
     /* Recognition object */
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             @Override
             public void onClick(View view) {
                 try {
-                    switchSearch(MENU_SEARCH);
+                    switchSearch(PHRASE_SEARCH);
                 } catch (Exception e) {
                     Log.e("click", e.getClass().getCanonicalName());
                 }
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             return;
         String text = hypothesis.getHypstr();
         if (text.equals(KEYPHRASE))
-            switchSearch(MENU_SEARCH);
+            switchSearch(PHRASE_SEARCH);
         Log.e("onPartialResult", text);
     }
 
@@ -167,7 +167,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
      */
     @Override
     public void onEndOfSpeech() {
-        if (!recognizer.getSearchName().equals(KWS_SEARCH))
+        Log.e("onEndOfSpeech", "End search");
+        if (recognizer.getSearchName().equals(PHRASE_SEARCH))
             switchSearch(KWS_SEARCH);
     }
 
@@ -192,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         recognizer = SpeechRecognizerSetup.defaultSetup()
                 .setAcousticModel(new File(assetsDir, "ru-ru-ptm"))
                 .setDictionary(new File(assetsDir, "car.dict"))
+                .setBoolean("-remove_noise", false)
+                .setKeywordThreshold(1e-7f)
 
                 //.setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
 
@@ -206,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         recognizer.addKeyphraseSearch(KWS_SEARCH, KEYPHRASE);
 
         File menuGrammar = new File(assetsDir, "car.gram");
-        recognizer.addGrammarSearch(MENU_SEARCH, menuGrammar);
+        recognizer.addGrammarSearch(PHRASE_SEARCH, menuGrammar);
     }
 
     @Override
