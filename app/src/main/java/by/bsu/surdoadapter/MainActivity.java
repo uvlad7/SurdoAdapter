@@ -90,16 +90,15 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST_RECORD_AUDIO);
         }
-
+        new SetupTask(this).execute();
         //work with database
         mDBHelper = new DatabaseHelper(this);
         mDb = mDBHelper.getReadableDatabase();
 
         //work with video
-        videoView = (VideoView) findViewById(R.id.videoView);
+        videoView = findViewById(R.id.videoView);
         videoView.setMediaController(new MediaController(this));
 
-        new SetupTask(this).execute();
     }
 
 
@@ -188,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() +"/"+cursor.getString(0)));
             videoView.requestFocus(0);
             videoView.start();
+            cursor.close();
             Log.e("onResult", text);
         }
     }
@@ -223,7 +223,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         recognizer = SpeechRecognizerSetup.defaultSetup()
                 .setAcousticModel(new File(assetsDir, "ru-ru-ptm"))
                 .setDictionary(new File(assetsDir, "car.dict"))
-                .setBoolean("-remove_noise", false)
+                .setBoolean("-remove_noise", true)
+                .setSampleRate(16000)
                 .setKeywordThreshold(1e-7f)
 
                 //.setRawLogDir(assetsDir) // To disable logging of raw audio comment out this call (takes a lot of space on the device)
