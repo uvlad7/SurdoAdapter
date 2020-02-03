@@ -2,7 +2,6 @@ package by.bsu.surdoadapter;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,6 +18,8 @@ import com.google.android.material.navigation.NavigationView;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,12 +40,6 @@ import edu.cmu.pocketsphinx.SpeechRecognizerSetup;
 
 public class MainActivity extends AppCompatActivity implements RecognitionListener {
 
-    //Переменная для работы с БД
-    DatabaseHelper mDBHelper;
-   public SQLiteDatabase mDb;
-
-    VideoView videoView;
-
     private static final String KWS_SEARCH = "wakeup";
     /* Keyword we are looking for to activate menu */
     private static final String KEYPHRASE = "активировать";
@@ -52,6 +47,11 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     private static final String PHRASE_SEARCH = "phrase";
     /* Used to handle permission request */
     private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
+    public SQLiteDatabase mDb;
+    Map<String, Integer> mHashMap = new HashMap<>();
+    VideoView videoView;
+    //Переменная для работы с БД
+    DatabaseHelper mDBHelper;
     /* Recognition object */
     private SpeechRecognizer recognizer;
 
@@ -92,44 +92,15 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         }
         new SetupTask(this).execute();
         //work with database
-        mDBHelper = new DatabaseHelper(this);
-        mDb = mDBHelper.getReadableDatabase();
-
+        mHashMap.put("поворот направо", R.raw.turn_right);
+        mHashMap.put("поворот налево", R.raw.turn_left);
+        mHashMap.put("тормоз", R.raw.brake);
+        mHashMap.put("газ", R.raw.gas);
+        mHashMap.put("автомобиль", R.raw.car);
         //work with video
         videoView = findViewById(R.id.videoView);
         videoView.setMediaController(new MediaController(this));
-
-    }
-
-
-
-    private static class SetupTask extends AsyncTask<Void, Void, Exception> {
-        WeakReference<MainActivity> activityReference;
-
-        SetupTask(MainActivity activity) {
-            this.activityReference = new WeakReference<>(activity);
-        }
-
-        @Override
-        protected Exception doInBackground(Void... params) {
-            try {
-                Assets assets = new Assets(activityReference.get());
-                File assetDir = assets.syncAssets();
-                activityReference.get().setupRecognizer(assetDir);
-            } catch (IOException e) {
-                return e;
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Exception result) {
-            if (result != null) {
-                Log.e("onPostExecute", "Failed to init recognizer");
-            } else {
-                activityReference.get().switchSearch(KWS_SEARCH);
-            }
-        }
+        videoView.setZOrderOnTop(true);
     }
 
     @Override
@@ -182,12 +153,10 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             String text = hypothesis.getHypstr();
             //сделать селект к базе
             //найти картиночку и вывести в VideoView
-            String query = "SELECT path FROM lib where phrase = " + text + ";";
-            Cursor cursor = mDb.rawQuery(query, null);
-            videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() +"/"+cursor.getString(0)));
+
+            videoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + mHashMap.get(text)));
             videoView.requestFocus(0);
             videoView.start();
-            cursor.close();
             Log.e("onResult", text);
         }
     }
@@ -209,8 +178,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         if (searchName.equals(KWS_SEARCH)) {
             recognizer.startListening(searchName);
             Log.e("switchSearch", "Activated");
-        }
-        else {
+        } else {
             Log.e("switchSearch", "Start listening");
             recognizer.startListening(searchName, 10000);
         }
@@ -272,5 +240,34 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    private static class SetupTask extends AsyncTask<Void, Void, Exception> {
+        WeakReference<MainActivity> activityReference;
+
+        SetupTask(MainActivity activity) {
+            this.activityReference = new WeakReference<>(activity);
+        }
+
+        @Override
+        protected Exception doInBackground(Void... params) {
+            try {
+                Assets assets = new Assets(activityReference.get());
+                File assetDir = assets.syncAssets();
+                activityReference.get().setupRecognizer(assetDir);
+            } catch (IOException e) {
+                return e;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Exception result) {
+            if (result != null) {
+                Log.e("onPostExecute", "Failed to init recognizer");
+            } else {
+                activityReference.get().switchSearch(KWS_SEARCH);
+            }
+        }
     }
 }
